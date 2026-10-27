@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101827">
+<title>Сызықтық функция зертханасы</title>
+<style>
+:root{color-scheme:dark;--bg:#101827;--panel:#192538;--line:#33445b;--text:#edf4ff;--muted:#a7b5ca;--blue:#60a5fa;--green:#2dd4bf;--orange:#fbbf24}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 system-ui,-apple-system,sans-serif}
+header,main,footer{width:min(1120px,92%);margin:auto}
+header{padding:30px 0 18px}
+h1{font-size:clamp(27px,5vw,43px);line-height:1.15;margin:10px 0}
+h2{font-size:21px;margin:0 0 14px}
+p{color:var(--muted)}
+.eyebrow{color:var(--green);font-weight:700;letter-spacing:1.5px;font-size:12px}
+.layout{display:grid;grid-template-columns:320px 1fr;gap:18px;align-items:start}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;margin-bottom:18px;min-width:0}
+.control{margin:20px 0}
+.row{display:flex;justify-content:space-between;gap:12px;align-items:center}
+output{color:var(--green);font-weight:800;font-size:20px}
+input[type=range]{width:100%;accent-color:var(--green);cursor:pointer}
+input[type=number]{width:82px;padding:8px;background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--text)}
+input[type=checkbox]{accent-color:var(--green);width:17px;height:17px}
+button{padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:#26364d;color:var(--text);font:inherit;cursor:pointer}
+button:hover{border-color:var(--green)}
+button.primary{background:var(--green);color:#062a29;font-weight:800;border:0}
+canvas{display:block;width:100%;height:auto;aspect-ratio:1.25;background:#111c2c;border-radius:12px;touch-action:pan-y}
+.formula{font-size:clamp(26px,4vw,39px);font-weight:800;overflow-wrap:anywhere;margin:8px 0}
+.pill{display:inline-block;padding:4px 10px;border-radius:99px;background:#203e46;color:var(--green);font-size:13px;font-weight:700}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+.stat{padding:12px;background:#111c2c;border-radius:10px;min-width:0}
+.stat small{display:block;color:var(--muted)}
+.stat strong{overflow-wrap:anywhere}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
+.tabs button.active{background:var(--green);color:#062a29;font-weight:700}
+.section{display:none}.section.active{display:block}
+.question{padding:14px 0;border-bottom:1px solid var(--line)}
+.question label{display:block;padding:5px 0;cursor:pointer}
+.notice{padding:12px;border:1px solid var(--line);border-radius:10px;color:var(--muted);font-size:14px}
+footer{padding:10px 0 35px;color:var(--muted);font-size:13px}
+@media(max-width:760px){.layout{grid-template-columns:1fr}header{padding-top:22px}.panel{padding:16px}.chart-panel{order:-1}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<header>
+ <div class="eyebrow">ИНТЕРАКТИВТІ МАТЕМАТИКА ЗЕРТХАНАСЫ</div>
+ <h1>Сызықтық функция</h1>
+ <p>k және b коэффициенттерін өзгертіп, түзу графигінің қасиеттерін зертте.</p>
+ <div class="formula" id="mainFormula">y = 2x + 1</div>
+ <span class="pill" id="trend">Өспелі функция</span>
+</header>
+<main>
+ <div class="layout">
+  <aside>
+   <section class="panel">
+    <h2>Коэффициенттер</h2>
+    <div class="control">
+     <div class="row"><label for="krange"><b>k — көлбеулік</b></label><output id="kout">2</output></div>
+     <input id="krange" type="range" min="-5" max="5" step="0.5" value="2">
+     <div class="row"><small>-5</small><small>0</small><small>5</small></div>
+     <div class="row"><span>Нақты мән:</span><input id="knum" type="number" min="-5" max="5" step="0.5" value="2"></div>
+    </div>
+    <div class="control">
+     <div class="row"><label for="brange"><b>b — бос мүше</b></label><output id="bout">1</output></div>
+     <input id="brange" type="range" min="-5" max="5" step="0.5" value="1">
+     <div class="row"><small>-5</small><small>0</small><small>5</small></div>
+     <div class="row"><span>Нақты мән:</span><input id="bnum" type="number" min="-5" max="5" step="0.5" value="1"></div>
+    </div>
+    <div class="row" style="flex-wrap:wrap">
+     <button id="reset">↺ Қалпына келтіру</button>
+     <button id="random">Кездейсоқ мән</button>
+    </div>
+    <div class="control">
+     <label><input id="compare" type="checkbox"> Екінші графикті көрсету</label>
+    </div>
+    <div id="secondControls" hidden>
+     <div class="control">
+      <div class="row"><label for="k2">Екінші k</label><output id="k2out">-1</output></div>
+      <input id="k2" type="range" min="-5" max="5" step="0.5" value="-1">
+     </div>
+     <div class="control">
+      <div class="row"><label for="b2">Екінші b</label><output id="b2out">2</output></div>
+      <input id="b2" type="range" min="-5" max="5" step="0.5" value="2">
+     </div>
+    </div>
+   </section>
+   <section class="panel">
+    <h2>Теория</h2>
+    <p><b>k &gt; 0:</b> функция өспелі.</p>
+    <p><b>k &lt; 0:</b> функция кемімелі.</p>
+    <p><b>k = 0:</b> y = b — тұрақты функция.</p>
+    <p><b>b:</b> графиктің y осімен қиылысатын нүктесінің ординатасы.</p>
+    <p><b>k:</b> x бір бірлікке өзгергенде y мәнінің қаншаға өзгеретінін көрсетеді.</p>
+   </section>
+  </aside>
+  <div class="chart-panel">
+   <section class="panel">
+    <div class="row"><h2>График</h2><span class="pill">y = kx + b</span></div>
+    <canvas id="graph" width="700" height="560" aria-label="Сызықтық функция графигі"></canvas>
+    <div class="stats">
+     <div class="stat"><small>Функция түрі</small><strong id="kind">Өспелі</strong></div>
+     <div class="stat"><small>y осімен қиылысу</small><strong id="yint">(0; 1)</strong></div>
+     <div class="stat"><small>x осімен қиылысу</small><strong id="xint">(-0.5; 0)</strong></div>
+     <div class="stat"><small>Өзгеру жылдамдығы</small><strong id="slope">Δy = 2 · Δx</strong></div>
+    </div>
+   </section>
+   <section class="panel">
+    <h2>Зерттеу режимі</h2>
+    <div class="tabs">
+     <button class="active" data-tab="investigate">Зерттеу</button>
+     <button data-tab="tasks">Тапсырмалар</button>
+     <button data-tab="quiz">Тест</button>
+    </div>
+    <div id="investigate" class="section active">
+     <p id="explanation"></p>
+     <div class="notice">Тәжірибе: алдымен b мәнін өзгертпей, k-ны өзгертіңіз. Кейін k-ны тұрақты ұстап, b-ны өзгертіңіз. Байқаған айырмашылықты түсіндіріңіз.</div>
+    </div>
+    <div id="tasks" class="section">
+     <div class="question"><b>1.</b> Функция өспелі болуы үшін k қандай болуы керек?</div>
+     <div class="question"><b>2.</b> y = 3x - 2 түзуі y осін қай нүктеде қиып өтеді?</div>
+     <div class="question"><b>3.</b> y = -2x + 4 функциясы өспелі ме, кемімелі ме?</div>
+     <div class="question"><b>4.</b> y = 5 болса, график қандай түзу болады?</div>
+     <button id="showAnswers">Жауаптарды көрсету</button>
+     <div id="answers" class="notice" hidden>1. k &gt; 0. 2. (0; -2). 3. Кемімелі. 4. Ox осіне параллель көлденең түзу.</div>
+    </div>
+    <div id="quiz" class="section">
+     <form id="quizForm">
+      <div class="question"><b>1.</b> k = -3 болса, функция қандай?</div>
+      <label><input type="radio" name="q1" value="a"> Өспелі</label>
+      <label><input type="radio" name="q1" value="b"> Кемімелі</label>
+      <label><input type="radio" name="q1" value="c"> Тұрақты</label>
+      <div class="question"><b>2.</b> y = 2x + 4 графигі y осін қай нүктеде қиып өтеді?</div>
+      <label><input type="radio" name="q2" value="a"> (4; 0)</label>
+      <label><input type="radio" name="q2" value="b"> (0; 2)</label>
+      <label><input type="radio" name="q2" value="c"> (0; 4)</label>
+      <div class="question"><b>3.</b> k = 0 болғанда график қандай?</div>
+      <label><input type="radio" name="q3" value="a"> Тік түзу</label>
+      <label><input type="radio" name="q3" value="b"> Көлденең түзу</label>
+      <label><input type="radio" name="q3" value="c"> Парабола</label>
+      <button class="primary" type="submit">Тексеру</button>
+     </form>
+     <p id="quizResult" aria-live="polite"></p>
+    </div>
+   </section>
+  </div>
+ </div>
+</main>
+<footer>Сызықтық функцияны зерттеу симуляторы · Оқу мақсатында жасалған</footer>
+<script>
+const $ = id => document.getElementById(id);
+const state = {k:2,b:1,k2:-1,b2:2};
+const fmt = n => Number(n.toFixed(2)).toString();
+const coord = n => Math.abs(n)<1e-9 ? "0" : fmt(n);
+function equation(k,b){
+ if(k===0) return "y = "+fmt(b);
+ let x = (k===1?"x":k===-1?"−x":fmt(k)+"x");
+ return "y = "+x+(b===0?"":b>0?" + "+fmt(b):" − "+fmt(-b));
+}
+function setValue(key,value){
+ const n = Math.max(-5,Math.min(5,Number(value)));
+ if(!Number.isFinite(n)) return;
+ state[key]=n;
+ if($(key+"range")) $(key+"range").value=n;
+ if($(key+"num")) $(key+"num").value=n;
+ if($(key+"out")) $(key+"out").textContent=fmt(n);
+ update();
+}
+["k","b"].forEach(key=>{
+ $(key+"range").addEventListener("input",e=>setValue(key,e.target.value));
+ $(key+"num").addEventListener("change",e=>setValue(key,e.target.value));
+});
+["k2","b2"].forEach(key=>{
+ $(key).addEventListener("input",e=>{
+  state[key]=Number(e.target.value);
+  $(key+"out").textContent=fmt(state[key]);
+  update();
+ });
+});
+$("compare").addEventListener("change",()=>{
+ $("secondControls").hidden=!$("compare").checked;draw();
+});
+$("reset").addEventListener("click",()=>{
+ setValue("k",2);setValue("b",1);
+ state.k2=-1;state.b2=2;
+ ["k2","b2"].forEach(key=>{
+  $(key).value=state[key];$(key+"out").textContent=fmt(state[key]);
+ });
+ draw();
+});
+$("random").addEventListener("click",()=>{
+ setValue("k",Math.round((Math.random()*20-10))/2);
+ setValue("b",Math.round((Math.random()*20-10))/2);
+});
+function update(){
+ const {k,b}=state;
+ $("mainFormula").textContent=equation(k,b);
+ $("kout").textContent=fmt(k);$("bout").textContent=fmt(b);
+ const kind=k>0?"Өспелі":k<0?"Кемімелі":"Тұрақты";
+ $("kind").textContent=kind+" функция";
+ $("trend").textContent=kind+" функция";
+ $("yint").textContent="(0; "+fmt(b)+")";
+ $("xint").textContent=k===0?(b===0?"Барлық x мәні үшін y=0":"Ox осімен қиылыспайды"):"("+fmt(-b/k)+"; 0)";
+ $("slope").textContent="Δy = "+fmt(k)+" · Δx";
+ $("explanation").textContent=(k>0?"k оң болғандықтан, x артқан сайын y артады.":k<0?"k теріс болғандықтан, x артқан сайын y кемиді.":"k нөлге тең болғандықтан, график көлденең түзу.")+" b = "+fmt(b)+" болғандықтан, түзу y осін (0; "+fmt(b)+") нүктесінде қиып өтеді.";
+ draw();
+}
+function draw(){
+ const canvas=$("graph"),ctx=canvas.getContext("2d");
+ const W=canvas.width,H=canvas.height;
+ const left=48,right=20,top=24,bottom=42;
+ const size=Math.min((W-left-right)/10,(H-top-bottom)/10);
+ const ox=W/2,oy=H/2;
+ const px=x=>ox+x*size,py=y=>oy-y*size;
+ ctx.clearRect(0,0,W,H);
+ ctx.fillStyle="#111c2c";ctx.fillRect(0,0,W,H);
+ ctx.lineWidth=1;ctx.strokeStyle="#29394f";
+ for(let i=-5;i<=5;i++){
+  ctx.beginPath();ctx.moveTo(px(i),top);ctx.lineTo(px(i),H-bottom);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(left,py(i));ctx.lineTo(W-right,py(i));ctx.stroke();
+ }
+ ctx.strokeStyle="#9aaec8";ctx.lineWidth=2;
+ ctx.beginPath();ctx.moveTo(left,oy);ctx.lineTo(W-right,oy);ctx.stroke();
+ ctx.beginPath();ctx.moveTo(ox,H-bottom);ctx.lineTo(ox,top);ctx.stroke();
+ ctx.fillStyle="#c6d4e6";ctx.font="15px system-ui";
+ ctx.textAlign="center";ctx.textBaseline="top";
+ for(let i=-5;i<=5;i++)if(i!==0)ctx.fillText(i,px(i),oy+8);
+ ctx.textAlign="right";ctx.textBaseline="middle";
+ for(let i=-5;i<=5;i++)if(i!==0)ctx.fillText(i,ox-8,py(i));
+ ctx.fillText("0",ox-8,oy+12);
+ ctx.fillText("x",W-right-3,oy-23);
+ ctx.fillText("y",ox+16,top+5);
+ function line(k,b,color){
+  ctx.strokeStyle=color;ctx.lineWidth=4;ctx.lineCap="round";
+  ctx.beginPath();ctx.moveTo(px(-5),py(-5*k+b));ctx.lineTo(px(5),py(5*k+b));ctx.stroke();
+  if(b>=-5&&b<=5){
+   ctx.fillStyle=color;ctx.beginPath();ctx.arc(px(0),py(b),6,0,Math.PI*2);ctx.fill();
+  }
+ }
+ line(state.k,state.b,"#2dd4bf");
+ if($("compare").checked)line(state.k2,state.b2,"#fbbf24");
+}
+document.querySelectorAll("[data-tab]").forEach(btn=>btn.addEventListener("click",()=>{
+ document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b===btn));
+ document.querySelectorAll(".section").forEach(s=>s.classList.toggle("active",s.id===btn.dataset.tab));
+}));
+$("showAnswers").addEventListener("click",()=>{
+ $("answers").hidden=!$("answers").hidden;
+ $("showAnswers").textContent=$("answers").hidden?"Жауаптарды көрсету":"Жауаптарды жасыру";
+});
+$("quizForm").addEventListener("submit",e=>{
+ e.preventDefault();
+ const data=new FormData(e.target);
+ const keys=["q1","q2","q3"];
+ const correct=["b","c","b"];
+ let score=0,answered=0;
+ keys.forEach((key,i)=>{
+  if(data.get(key)!==null)answered++;
+  if(data.get(key)===correct[i])score++;
+ });
+ $("quizResult").textContent="Нәтиже: "+score+"/3 дұрыс. Жауап берілген сұрақтар: "+answered+"/3.";
+});
+update();
+</script>
+</body>
+</html>
